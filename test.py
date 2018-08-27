@@ -8,21 +8,21 @@ app.config.from_object(__name__)
 app.config['SECRET_KEY'] = '7d441f27d441f27567d441f2b6176a'
 
 class ReusableForm(Form):
-    name = TextField('Question', validators=[validators.required()])
+    question = TextField('Question', validators=[validators.required()])
 
 
 @app.route("/", methods=['GET', 'POST'])
 def hello():
     form = ReusableForm(request.form)
 
-    print (form.errors)
+    print(form.errors)
     if request.method == 'POST':
-        name=request.form['name']
-        print (name)
+        question=request.form['question']
+        print(question)
 
         if form.validate():
             # Save the comment here.
-            flash('Hello ' + name)
+            flash(question)
         else:
             flash('Error: All the form fields are required. ')
 
