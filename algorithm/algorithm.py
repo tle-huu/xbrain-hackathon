@@ -4,18 +4,19 @@ import numpy as np
 from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
 import sys
-
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.cluster import KMeans
 from sklearn.metrics import adjusted_rand_score
 from sklearn.decomposition import TruncatedSVD
 from sklearn.pipeline import Pipeline
 import pickle
-
-
 import pandas as pd
+from scipy import spatial
+
+# result = 1 - spatial.distance.cosine(dataSetI, dataSetII)
 
 
+# Turn a sentence to a vector
 def sentence2vec(sentence):
 	split = sentence.split(" ")
 	length = len(split)
@@ -33,22 +34,38 @@ def sentence2vec(sentence):
 		vector[i] /= length
 	return (vector)
 
+# Load the english dictionnary of words-vectors
 file_Name = "en_model"
 fileObject = open(file_Name,'rb')
-
 en_model = pickle.load(fileObject)
 fileObject.close()
-data = pd.read_csv("../data/questions.csv")
+
+data = pd.read_csv("../data/answers2.csv")
 
 doc = []
 
+dico = {}
 
-for i in range(150):
-	vec = sentence2vec(data.title[i])
+print("Beginning")
+for i in range(30):
+	print(i)
+	print(data.text[i])
+	print()
+	vec = sentence2vec(data.text[i])
+	# id_ = data.id[i]
 	if vec != None:
 		doc.append(vec)
+		# dico[tuple(vec)] = id_
 
-true_k = len(doc) / 3
+print("Vectorized")
+fileObject = open("answers_vec_test1",'wb')
+pickle.dump(doc, fileObject)
+fileObject.close()
+
+
+sys.exit(1)
+
+true_k = 5
 model = KMeans(n_clusters=true_k, init='k-means++', max_iter=100, n_init=1)
 print("Training")
 model.fit(doc)
