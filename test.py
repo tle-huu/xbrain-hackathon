@@ -1,5 +1,4 @@
-from flask import Flask, render_template, flash, request
-from wtforms import Form, TextField, TextAreaField, validators, StringField, SubmitField
+from flask import Flask, request, jsonify, abort
 
 # App config.
 DEBUG = True
@@ -7,37 +6,35 @@ app = Flask(__name__)
 app.config.from_object(__name__)
 app.config['SECRET_KEY'] = '7d441f27d441f27567d441f2b6176a'
 
-class ReusableForm(Form):
-    question = TextField('Question', validators=[validators.required()])
 
+@app.route("/process", methods=['POST'])
+def ask():
+    question = ''
+    if 'text' in request.form:
+        question = request.form['text']
+    elif request.json and 'question' in request.json:
+        question = request.json['question']
+    else:
+        abort(400)
 
+    print(question)
+    # Entry Point For Quesiton to NLP
+    # ret = find_answers(question)
+    ret = {
+        'electedAnswer': "Cause He dislikes Tom Brady",
+        'buckets': [32, 56, 12],
+        'bestAnswers': [453, 543, 687]
+    }
 
-@app.route("/", methods=['GET', 'POST'])
-def hello():
-    form = ReusableForm(request.form)
-
-    print(form.errors)
-    if request.method == 'POST':
-        question=request.form['question']
-        print(question)
-
-        if form.validate():
-            # Save the comment here.
-            flash(question)
-			return redirect(url_for('success', question=question));
-
-        else:
-            flash('Error: All the form fields are required. ')
-
-    return render_template('hello.html', form=form)
-
-
-@app.route("/process", methods=['GET', 'POST'])
-def success(question):
-	if request.method == 'GET':
-		print("Here was the question : " + question)
-
-	return render_template('process.html', question=question);
+    # Printing HTTP Return Body
+    print()
+    print("raw ret : " , end='')
+    print(ret)
+    print("json : ", end='')
+    print(jsonify(ret))
+    print("---")
+    print()
+    return jsonify(ret), 200
 
 if __name__ == "__main__":
     app.run()
