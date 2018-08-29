@@ -1,166 +1,111 @@
-#Python code to illustrate parsing of XML files
-# importing the required modules
 import csv
 import requests
 import xml.etree.ElementTree as ET
 import sys
-
-def parseXML(xmlfile):
-
-	# create element tree object
-	tree = ET.parse(xmlfile)
-
-	# get root element
-	root = tree.getroot()
-	# create empty list for news items
-	newsitems = []
-
-	# iterate news items
-	for item in root.findall('./questions/question'):
-
-		# empty news dictionary
-		news = {}
-		# iterate child elements of item
-			# special checking for namespace object content:media
-		news['category'] = item.attrib['category']
-		news['id'] = item.attrib['question_id']
-		news['title'] = item.attrib['title']
-			# append news dictionary to news items list
-		newsitems.append(news)
-
-	# return news items list
-	return newsitems
-
-
-def savetoCSV(newsitems, filename):
-
-    # specifying the fields for csv file
-    fields = ['category', 'id', 'title']
-
-    # writing to csv file
-    with open(filename, 'w') as csvfile:
-
-        # creating a csv dict writer object
-        writer = csv.DictWriter(csvfile, fieldnames = fields)
-
-        # writing headers (field names)
-        writer.writeheader()
-
-        # writing data rows
-        writer.writerows(newsitems)
-
-
-def main():
-	# parse xml file
-	newsitems = parseXML('./hax/data/train.xml')
-
-	# store news items in a csv file
-	savetoCSV(newsitems, 'terence.csv')
-
-
-if __name__ == "__main__":
-
-    # calling main function
-    main()
-
-
-#Python code to illustrate parsing of XML files
-# importing the required modules
-import csv
-import requests
-import xml.etree.ElementTree as ET
-import sys
-
-
-import snowballstemmer
 import nltk
-from nltk.corpus import stopwords
 import xml
-
 import re
+import string
+import enchant
 
+from nltk.corpus import stopwords
 from bs4 import BeautifulSoup
 
-def cleanhtml(raw_html):
-	cleantext = BeautifulSoup(raw_html, "html.parser").text
+TO_PARSE = 'test.xml'
 
-	# cleanr = re.compile('<.*?>')
-	# cleantext = re.sub(cleanr, '', raw_html)
-	# return cleantext
-
-def remove_tags(text):
-	return ''.join(xml.etree.ElementTree.fromstring(text).itertext())
-
-def preprocess(data):
+def preprocessQuestions(data):
 	punctuation = ['.', ',', '"', "'", '?', '!', ':', ';', '(', ')', '[', ']', '{', '}', '__eos__', '\\']
+	numbers = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
+	dash = ['-', '_', '+', '&', '/', '*', '=', '$', '#']
 	data = data.lower()
 	for punc in punctuation:
 		data = data.replace(punc, '')
-	# Step 2: tokenize
-	# data = nltk.word_tokenize(data)
-	# Step 3: strip stopwords
-	# stemmer = snowballstemmer.stemmer('english')
-	# data = stemmer.stemWords(data)
-
+	for number in numbers:
+		data = data.replace(number, '')
+	for d in dash:
+		data = data.replace(d, ' ')
 	return data
 
-def parseXML2(xmlfile):
 
-	# create element tree object
-	print("Parsing xml...")
-	tree = ET.parse(xmlfile)
-	print("Finished parsing xml...")
+def preprocessAnswers(data):
+	punctuation = ['.', ',', '"', "'", '?', '!', ':', ';', '(', ')', '[', ']', '{', '}', '__eos__', '\\']
+	numbers = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
 
-	# get root element
-	root = tree.getroot()
-	# create empty list for news items
-	newsitems = []
+	data = data.lower()
+	for punc in punctuation:
+		data = data.replace(punc, '')
+	for number in numbers:
+		data = data.replace(number, '')
 
-	# iterate news items
-	for item in root.findall('./answers/answer'):
+	cleanr = re.compile('<pre((.|\n)*?)/pre>|<.*?>')
+	cleantext = re.sub(cleanr, '', data)
+	d = enchant.Dict("en_US")
+	data = ''
+	for word in cleantext.split():
+		if d.check(word):
+			data += word + ' '
+	return data
 
-		# empty news dictionary
-		news = {}
 
-		news['id'] = item.attrib['answer_id']
-		news['group'] = item.attrib['group']
-		news['elected'] = item.attrib['isElectedAnswer']
-
-		data = item.attrib['text']
-		data = preprocess(data)
-		# data = remove_tags(data)
-		news['text'] = data
-		newsitems.append(news)
-
-	# return news items list
+def parseQuestionsXML(xmlfile):
+	print("Parsing xml questions...")
+	tree = ET.parse(xmlfile)									# create element tree object
+	print("Finished parsing xml questions.")
+	root = tree.getroot()										# get root element
+	newsitems = []												# create empty list for news items
+	for item in root.findall('./questions/question'):			# iterate news items
+		news = {}												# empty news dictionary
+		news['category'] = item.attrib['category']
+		news['id'] = item.attrib['question_id']
+		data = item.attrib['title']
+		data = preprocessQuestions(data)
+		news['title'] = data
+		newsitems.append(news)									# append news dictionary to news items list
 	return newsitems
 
 
-def savetoCSV2(newsitems, filename):
+def parseAnswersXML(xmlfile):
+	print("Parsing xml answers...")
+	tree = ET.parse(xmlfile)
+	print("Finished parsing xml answers.")
+	root = tree.getroot()										# get root element
+	newsitems = []												# create empty list for news items
+	for item in root.findall('./answers/answer'):				# iterate news items
+		news = {}
+		news['id'] = item.attrib['answer_id']
+		news['group'] = item.attrib['group']
+		news['elected'] = item.attrib['isElectedAnswer']
+		data = item.attrib['text']
+		data = preprocessAnswers(data)
+		news['text'] = data
+		newsitems.append(news)
+	return newsitems
 
-	# specifying the fields for csv file
-	fields = ['id', 'group', 'elected', 'text']
 
-	# writing to csv file
-	with open(filename, 'w') as csvfile:
-
-		# creating a csv dict writer object
-		writer = csv.DictWriter(csvfile, fieldnames = fields)
-
-		# writing headers (field names)
-		writer.writeheader()
-
-		# writing data rows
-		writer.writerows(newsitems)
+def saveQuestionsToCSV(newsitems, filename):
+    fields = ['category', 'id', 'title']						# specifying the fields for csv file
+    with open(filename, 'w') as csvfile:						# writing to csv file
+        writer = csv.DictWriter(csvfile, fieldnames = fields)	# creating a csv dict writer object
+        writer.writeheader()									# writing headers (field names)
+        writer.writerows(newsitems)								# writing data rows
 
 
-def main2():
-	# parse xml file
-	newsitems = parseXML2('./hax/data/train.xml')
-	# store news items in a csv file
-	savetoCSV2(newsitems, 'answers.csv')
+def saveAnswersToCSV(newsitems, filename):
+	fields = ['id', 'group', 'elected', 'text']					# specifying the fields for csv file
+	with open(filename, 'w') as csvfile:						# writing to csv file
+		writer = csv.DictWriter(csvfile, fieldnames = fields)	# creating a csv dict writer object
+		writer.writeheader()									# writing headers (field names)
+		writer.writerows(newsitems)								# writing data rows
 
+
+def main():
+	newQuestions = parseQuestionsXML(TO_PARSE)					# parse xml file
+	saveQuestionsToCSV(newQuestions, 'questions2.csv')			# store news items in a csv file
+	newAnswers = parseAnswersXML(TO_PARSE)						# parse xml file
+	saveAnswersToCSV(newAnswers, 'answers2.csv')				# store news items in a csv file
+
+	savetoCSV(newsitems, 'questions.csv')
+	savetoCSV2(newsitems2, 'answers.csv')
 
 if __name__ == "__main__":
 	main()
-	main2()
