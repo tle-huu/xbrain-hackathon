@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify, abort
+from ml_hook import ml_hook
 
 # App config.
 DEBUG = True
@@ -23,12 +24,13 @@ def ask():
 
     print(question)
     # Entry Point For Quesiton to NLP
+    ret = ml_hook(question)
     # ret = find_answers(question)
-    ret = {
-        'electedAnswer': "Cause he dislikes Tom Brady",
-        'buckets': [32, 56, 12],
-        'bestAnswers': [453, 543, 687]
-    }
+    # ret = {
+    #     'electedAnswer': "Cause he dislikes Tom Brady",
+    #     'buckets': [32, 56, 12],
+    #     'bestAnswers': [453, 543, 687]
+    # }
 
     # Printing HTTP Return Body
     print()
