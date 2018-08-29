@@ -11,7 +11,12 @@ import enchant
 from nltk.corpus import stopwords
 from bs4 import BeautifulSoup
 
-TO_PARSE = 'test.xml'
+TO_PARSE = 'train.xml'
+#
+# file_Name = "en_model"
+# fileObject = open(file_Name,'rb')
+# en_model = pickle.load(fileObject)
+# fileObject.close()
 
 def preprocessQuestions(data):
 	punctuation = ['.', ',', '"', "'", '?', '!', ':', ';', '(', ')', '[', ']', '{', '}', '__eos__', '\\']
@@ -28,22 +33,28 @@ def preprocessQuestions(data):
 
 
 def preprocessAnswers(data):
-	punctuation = ['.', ',', '"', "'", '?', '!', ':', ';', '(', ')', '[', ']', '{', '}', '__eos__', '\\']
-	numbers = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
+	punctuation = [',', '"', "'", '?', '!', ':', ';', '(', ')', '[', ']', '{', '}', '__eos__', '\\', '\n']
+	numbers = ['0','1', '2', '3', '4', '5', '6', '7', '8', '9']
+	diamond = ["<p>", "</p>", "<blockquote>", "</blockquote>", "<pre>", "</pre>", "</code>", "<code>"]
+	dash = ['.', '-', '_', '+', '&', '/', '*', '=', '$', '#']
 
 	data = data.lower()
 	for punc in punctuation:
 		data = data.replace(punc, '')
 	for number in numbers:
 		data = data.replace(number, '')
+	for d in dash:
+		data = data.replace(d, ' ')
+	# for diam in diamond:
+		# data = data.replace(diam, '')
 
-	cleanr = re.compile('<pre((.|\n)*?)/pre>|<.*?>')
-	cleantext = re.sub(cleanr, '', data)
-	d = enchant.Dict("en_US")
-	data = ''
-	for word in cleantext.split():
-		if d.check(word):
-			data += word + ' '
+	cleanr = re.compile(r'<a((.|\n)*?)/a>|<.*?>')
+	data = re.sub(cleanr, '', data)
+	# d = enchant.Dict("en_US")
+	# data = ''
+	# for word in cleantext.split():
+	# 	if d.check(word):
+	# 		data += word + ' '
 	return data
 
 
@@ -99,13 +110,11 @@ def saveAnswersToCSV(newsitems, filename):
 
 
 def main():
-	newQuestions = parseQuestionsXML(TO_PARSE)					# parse xml file
-	saveQuestionsToCSV(newQuestions, 'questions2.csv')			# store news items in a csv file
+	# newQuestions = parseQuestionsXML(TO_PARSE)					# parse xml file
+	# saveQuestionsToCSV(newQuestions, 'questions2.csv')			# store news items in a csv file
 	newAnswers = parseAnswersXML(TO_PARSE)						# parse xml file
 	saveAnswersToCSV(newAnswers, 'answers2.csv')				# store news items in a csv file
 
-	savetoCSV(newsitems, 'questions.csv')
-	savetoCSV2(newsitems2, 'answers.csv')
 
 if __name__ == "__main__":
 	main()
