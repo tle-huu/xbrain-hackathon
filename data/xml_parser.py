@@ -7,11 +7,22 @@ import xml
 import re
 import string
 import enchant
-
+import nltk
+nltk.download('stopwords')
 from nltk.corpus import stopwords
-from bs4 import BeautifulSoup
+from nltk.tokenize import word_tokenize
 
-TO_PARSE = 'test.xml'
+TO_PARSE = 'train.xml'
+stop_words = set(stopwords.words('english'))
+
+def remove_stopwords(sentence):
+
+	word_tokens = word_tokenize(sentence)
+
+	filtered_sentence = [w for w in word_tokens if not w in stop_words]
+	return " ".join(filtered_sentence)
+
+
 
 def preprocessQuestions(data):
 	punctuation = ['.', ',', '"', "'", '?', '!', ':', ';', '(', ')', '[', ']', '{', '}', '__eos__', '\\']
@@ -24,7 +35,7 @@ def preprocessQuestions(data):
 		data = data.replace(number, '')
 	for d in dash:
 		data = data.replace(d, ' ')
-	return data
+	return remove_stopwords(data)
 
 
 def preprocessAnswers(data):
@@ -44,7 +55,7 @@ def preprocessAnswers(data):
 	for word in cleantext.split():
 		if d.check(word):
 			data += word + ' '
-	return data
+	return remove_stopwords(data)
 
 
 def parseQuestionsXML(xmlfile):

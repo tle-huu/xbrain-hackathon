@@ -15,12 +15,10 @@ from scipy import spatial
 
 # result = 1 - spatial.distance.cosine(dataSetI, dataSetII)
 
-split = "ewqewq".split(" ")
-print(split)
-sys.exit(1)
-
 # Turn a sentence to a vector
 def sentence2vec(sentence):
+	if sentence == None:
+		return None
 	split = sentence.split(" ")
 	length = len(split)
 	vector = [0] * 300
@@ -44,9 +42,6 @@ fileObject.close()
 
 data = pd.read_csv("../data/answers2.csv")
 
-print(data.text[len(data) - 1])
-sys.exit(1)
-
 doc = []
 
 dico = {}
@@ -63,9 +58,6 @@ print("Vectorized")
 fileObject = open("answers_dict",'wb')
 pickle.dump(dico, fileObject)
 fileObject.close()
-
-
-sys.exit(1)
 
 true_k = 5
 model = KMeans(n_clusters=true_k, init='k-means++', max_iter=100, n_init=1)
