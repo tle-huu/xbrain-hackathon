@@ -6,7 +6,6 @@ import nltk
 import xml
 import re
 import string
-import enchant
 import nltk
 nltk.download('stopwords')
 from nltk.corpus import stopwords
@@ -26,7 +25,7 @@ def remove_stopwords(sentence):
 
 def preprocessQuestions(data):
 	punctuation = ['.', ',', '"', "'", '?', '!', ':', ';', '(', ')', '[', ']', '{', '}', '__eos__', '\\']
-	numbers = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
+	numbers = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 	dash = ['-', '_', '+', '&', '/', '*', '=', '$', '#']
 	data = data.lower()
 	for punc in punctuation:
@@ -35,26 +34,24 @@ def preprocessQuestions(data):
 		data = data.replace(number, '')
 	for d in dash:
 		data = data.replace(d, ' ')
+	cleanr = re.compile('<pre((.|\n)*?)/pre>|<.*?>')
+	data = re.sub(cleanr, '', data)
 	return remove_stopwords(data)
 
 
 def preprocessAnswers(data):
 	punctuation = ['.', ',', '"', "'", '?', '!', ':', ';', '(', ')', '[', ']', '{', '}', '__eos__', '\\']
-	numbers = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
-
+	numbers = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+	dash = ['-', '_', '+', '&', '/', '*', '=', '$', '#']
 	data = data.lower()
 	for punc in punctuation:
 		data = data.replace(punc, '')
 	for number in numbers:
 		data = data.replace(number, '')
-
+	for d in dash:
+		data = data.replace(d, ' ')
 	cleanr = re.compile('<pre((.|\n)*?)/pre>|<.*?>')
-	cleantext = re.sub(cleanr, '', data)
-	d = enchant.Dict("en_US")
-	data = ''
-	for word in cleantext.split():
-		if d.check(word):
-			data += word + ' '
+	data = re.sub(cleanr, '', data)
 	return remove_stopwords(data)
 
 
@@ -110,13 +107,10 @@ def saveAnswersToCSV(newsitems, filename):
 
 
 def main():
-	newQuestions = parseQuestionsXML(TO_PARSE)					# parse xml file
-	saveQuestionsToCSV(newQuestions, 'questions2.csv')			# store news items in a csv file
+	# newQuestions = parseQuestionsXML(TO_PARSE)					# parse xml file
+	# saveQuestionsToCSV(newQuestions, 'questions2.csv')			# store news items in a csv file
 	newAnswers = parseAnswersXML(TO_PARSE)						# parse xml file
 	saveAnswersToCSV(newAnswers, 'answers2.csv')				# store news items in a csv file
-
-	savetoCSV(newsitems, 'questions.csv')
-	savetoCSV2(newsitems2, 'answers.csv')
 
 if __name__ == "__main__":
 	main()
