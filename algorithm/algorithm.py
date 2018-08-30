@@ -15,9 +15,10 @@ from scipy import spatial
 
 # result = 1 - spatial.distance.cosine(dataSetI, dataSetII)
 
-
 # Turn a sentence to a vector
 def sentence2vec(sentence):
+	if sentence == None:
+		return None
 	split = sentence.split(" ")
 	length = len(split)
 	vector = [0] * 300
@@ -28,7 +29,6 @@ def sentence2vec(sentence):
 		else:
 			length -= 1
 	if not length:
-		print(split)
 		return None
 	for i in range(300):
 		vector[i] /= length
@@ -47,23 +47,17 @@ doc = []
 dico = {}
 
 print("Beginning")
-for i in range(30):
-	print(i)
-	print(data.text[i])
-	print()
+for i in range(len(data)):
 	vec = sentence2vec(data.text[i])
-	# id_ = data.id[i]
+	id_ = data.id[i]
 	if vec != None:
 		doc.append(vec)
-		# dico[tuple(vec)] = id_
+		dico[tuple(vec)] = id_
 
 print("Vectorized")
-fileObject = open("answers_vec_test1",'wb')
-pickle.dump(doc, fileObject)
+fileObject = open("answers_dict",'wb')
+pickle.dump(dico, fileObject)
 fileObject.close()
-
-
-sys.exit(1)
 
 true_k = 5
 model = KMeans(n_clusters=true_k, init='k-means++', max_iter=100, n_init=1)
