@@ -21,24 +21,6 @@ fileObject = open(file_Name,'rb')
 en_model = pickle.load(fileObject)
 fileObject.close()
 
-def sentence2vec(sentence):
-	split = sentence.split(" ")
-	length = len(split)
-	vector = [0] * 300
-	for word in split:
-		if word in en_model.vocab:
-			for i in range(300):
-				vector[i] += en_model[word][i]
-		else:
-			length -= 1
-	if not length:
-		print(split)
-		return None
-	for i in range(300):
-		vector[i] /= length
-	return (vector)
-
-
 file_Name = "answers_vec_test1"
 
 fileObject = open(file_Name,'rb')
