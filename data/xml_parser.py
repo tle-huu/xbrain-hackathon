@@ -7,9 +7,21 @@ import xml
 import re
 import string
 import enchant
-
+import nltk
+nltk.download('stopwords')
 from nltk.corpus import stopwords
-from bs4 import BeautifulSoup
+from nltk.tokenize import word_tokenize
+
+TO_PARSE = 'train.xml'
+stop_words = set(stopwords.words('english'))
+
+def remove_stopwords(sentence):
+
+	word_tokens = word_tokenize(sentence)
+
+	filtered_sentence = [w for w in word_tokens if not w in stop_words]
+	return " ".join(filtered_sentence)
+
 
 TO_PARSE = 'train.xml'
 #
@@ -17,6 +29,7 @@ TO_PARSE = 'train.xml'
 # fileObject = open(file_Name,'rb')
 # en_model = pickle.load(fileObject)
 # fileObject.close()
+
 
 def preprocessQuestions(data):
 	punctuation = ['.', ',', '"', "'", '?', '!', ':', ';', '(', ')', '[', ']', '{', '}', '__eos__', '\\']
@@ -29,7 +42,7 @@ def preprocessQuestions(data):
 		data = data.replace(number, '')
 	for d in dash:
 		data = data.replace(d, ' ')
-	return data
+	return remove_stopwords(data)
 
 
 def preprocessAnswers(data):
@@ -43,19 +56,15 @@ def preprocessAnswers(data):
 		data = data.replace(punc, '')
 	for number in numbers:
 		data = data.replace(number, '')
-	for d in dash:
-		data = data.replace(d, ' ')
-	# for diam in diamond:
-		# data = data.replace(diam, '')
 
-	cleanr = re.compile(r'<a((.|\n)*?)/a>|<.*?>')
-	data = re.sub(cleanr, '', data)
-	# d = enchant.Dict("en_US")
-	# data = ''
-	# for word in cleantext.split():
-	# 	if d.check(word):
-	# 		data += word + ' '
-	return data
+	cleanr = re.compile('<pre((.|\n)*?)/pre>|<.*?>')
+	cleantext = re.sub(cleanr, '', data)
+	d = enchant.Dict("en_US")
+	data = ''
+	for word in cleantext.split():
+		if d.check(word):
+			data += word + ' '
+	return remove_stopwords(data)
 
 
 def parseQuestionsXML(xmlfile):
