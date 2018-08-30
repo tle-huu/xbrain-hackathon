@@ -13,6 +13,7 @@ import pickle
 import pandas as pd
 from scipy import spatial
 import time
+from sklearn.neighbors import NearestNeighbors
 
 
 file_Name = "en_model"
@@ -45,8 +46,19 @@ fileObject = open(file_Name,'rb')
 answers = pickle.load(fileObject)
 fileObject.close()
 
+dico = {}
+for i in range(len(answers)):
+	dico[tuple(answers[i])] = i
+
 test_question = "no access to usb port when running python script on boot"
 vectest = sentence2vec(test_question)
+
+neigh = NearestNeighbors(n_neighbors=1)
+neigh.fit(answers)
+
+res = neigh.kneighbors([vectest], return_distance=False)
+
+a = dico[tuple(answers[res[0][0]])]
 
 svd = TruncatedSVD(n_components=2).fit(answers)
 others = svd.transform(answers)
@@ -64,7 +76,8 @@ plt.scatter(vectest2[:,0], vectest2[:,1], marker='o')
 res = 0
 similarity = 7897474684545
 data = pd.read_csv("../data/answers2.csv")
-
+print(data.text[a])
+sys.exit(1)
 t = time.clock()
 for i in range(len(answers)):
 	shutup = spatial.distance.euclidean(vectest, answers[i])

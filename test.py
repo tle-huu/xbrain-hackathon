@@ -1,5 +1,7 @@
-from flask import Flask, render_template, flash, request
-from wtforms import Form, TextField, TextAreaField, validators, StringField, SubmitField
+from flask import Flask, request, jsonify, abort
+from ml_hook import ml_hook
+import requests
+
 
 # App config.
 DEBUG = True
@@ -7,37 +9,66 @@ app = Flask(__name__)
 app.config.from_object(__name__)
 app.config['SECRET_KEY'] = '7d441f27d441f27567d441f2b6176a'
 
-class ReusableForm(Form):
-    question = TextField('Question', validators=[validators.required()])
+
+@app.route("/process", methods=['POST'])
+def process():
+    response_url = None
+    if 'text' in request.form:
+        question = request.form['text']
+        response_url = request.form['response_url']
+    elif request.json and 'question' in request.json:
+        question = request.json['question']
+    elif request.json and 'challenge' in request.json:
+        print("We have been challenged")
+        return request.json['challenge']
+    else:
+        abort(400)
+        return
+
+    # POST to /ask route. this allows async execution of delayed response processing
+    quest_dict = {'question': question,
+                  'response_url': response_url}
+    respon = requests.post('http://localhost:5000/ask', json=quest_dict)
+
+    # Response to Slack app. This tells the app we are going to send another response
+    # after we process the question
+    if response_url is not None:
+        respon_dict = {'text': "We are working on finding that result",
+                       'response_type': 'in_channel'}
+        return jsonify(respon_dict), 200
+    return respon.json(), 200
 
 
+@app.route("/ask", methods=['POST'])
+def ask():
+    if request.json and 'question' in request.json and 'response_url' in request.json:
+        question = request.json['question']
+        response_url = request.json['response_url']
+    else:
+        abort(500)
+        return
 
-@app.route("/", methods=['GET', 'POST'])
-def hello():
-    form = ReusableForm(request.form)
+    # Entry Point For Quesiton to NLP
+    print(question)
+    ret = ml_hook(question)
 
-    print(form.errors)
-    if request.method == 'POST':
-        question=request.form['question']
-        print(question)
+    # ret = {
+    #         'acceptedAnswer': "Tom Brady",
+    #         'buckets': [12, 12, 12],
+    #         'bestAnswers': [12, 12, 12]
+    #        }
 
-        if form.validate():
-            # Save the comment here.
-            flash(question)
-			return redirect(url_for('success', question=question));
+    # Sending to slack URL delayed response
+    if response_url is not None:
+        data = {'text': ret['acceptedAnswer'],
+                'response_type': 'in_channel'}
+        requests.post(response_url, json=data)
 
-        else:
-            flash('Error: All the form fields are required. ')
-
-    return render_template('hello.html', form=form)
-
-
-@app.route("/process", methods=['GET', 'POST'])
-def success(question):
-	if request.method == 'GET':
-		print("Here was the question : " + question)
-
-	return render_template('process.html', question=question);
+    print()
+    print("raw ret : ", end='')
+    print(ret)
+    print()
+    return jsonify(ret), 200
 
 if __name__ == "__main__":
     app.run()
