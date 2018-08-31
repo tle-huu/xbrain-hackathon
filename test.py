@@ -23,7 +23,8 @@ def process():
         print("We have been challenged")
         return request.json['challenge']
     elif request.json and 'event' in request.json:
-        if 'username' in request.json['event'] and request.json['event']['username'] == 'BotOverflow':
+        print(request.json['event'])
+        if 'subtype' in request.json['event'] and request.json['event']['subtype'] == 'bot_message':
             return '', 200
         channel = request.json['event']['channel']
         question = request.json['event']['text']
