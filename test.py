@@ -77,13 +77,13 @@ def ask():
 
     # Sending to slack URL delayed response
     if response_url is not None:
-        data = {'text': ret['acceptedAnswer'],
+        data = {'text': ret['electedAnswer'],
                 'response_type': 'in_channel'}
         requests.post(response_url, json=data)
     elif channel is not None:
         data = {"ok": True,
                 "channel": channel,
-                "text": ret['acceptedAnswer'],
+                "text": ret['electedAnswer'],
                 "type": "message",
                 }
         requests.post("https://slack.com/api/chat.postMessage", json=data, headers={'Content-type': 'application/json',
