@@ -3,12 +3,19 @@ import pickle
 import pandas as pd
 from scipy import spatial
 import time
+from sklearn.externals import joblib
 
-
+## LOADING DICTIONNARY
 file_Name = "en_model"
 fileObject = open(file_Name,'rb')
 en_model = pickle.load(fileObject)
 fileObject.close()
+
+### LOADING KNN MODELS
+fileObject = open("models/knn_questions3",'rb')
+questionsmodel = pickle.load(fileObject)
+fileObject.close()
+answersmodel = joblib.load("models/knn_answers3.pkl")
 
 def sentence2vec(sentence):
     split = sentence.split(" ")
@@ -46,36 +53,30 @@ def ret_dict_update(ret_dict, data, i):
 
 def ml_hook(question):
 
-    file_Name = "answers_vec_test1"
+    userVect = sentence2vec(question)
 
-    fileObject = open(file_Name,'rb')
-
-    answers = pickle.load(fileObject)
-    fileObject.close()
-
-    vectest = sentence2vec(question)
     res = 0
-    data = pd.read_csv("../data/answers3.csv")
+    data = pd.read_csv("../data/answershtml.csv")
 
 
 
-    ret_dict = dict()
-    ret_dict['bestAnswers'] = [None, None, None]
-    ret_dict['buckets'] = [None, None, None]
+	bestAnswers = predict(userVect, answersmodel)
+	bestQuestions = predict(userVect, questions)
 
-    t = time.clock()
-    for i in range(len(answers)):
-        shutup = spatial.distance.euclidean(vectest, answers[i])
-        if shutup < similarity:
-            ret_dict = ret_dict_update(ret_dict, data, i)
-            print(i)
-            print(data.text[i])
-            print()
-            similarity = shutup
-            res = i
-    print("time : {}".format(time.clock() - t))
-    print("Res {}".format(res))
-    print("The most similar answers for {} is {}\n".format(question, data.id[res]))
 
-    print(data.text[res])
+	bestAnswersArray = [0] * 3
+	bestAnswersArray[0] = bestAnswers[0][0]
+	bestAnswersArray[1] = bestAnswers[0][1]
+	bestAnswersArray[2] = bestAnswers[0][2]
+
+	bestQuestionsArray = [0] * 3
+	bestQuestionsArray[0] = bestQuestions[0][0]
+	bestQuestionsArray[1] = bestQuestions[0][1]
+	bestQuestionsArray[2] = bestQuestions[0][2]
+
+	ret_dict = dict()
+	ret_dict['buckets'] = bestQuestionsArray
+	ret_dict['bestAnswers'] = bestAnswersArray
+	ret_dict['electedAnswer'] =  prepare_slack(data.text[bestAnswers[0][0]])
+
     return ret_dict
