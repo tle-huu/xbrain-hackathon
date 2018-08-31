@@ -28,6 +28,10 @@ def sentence2vec(sentence):
     return (vector)
 
 
+def predict(vect_quest, model):
+	neighbors = model.kneighbors([vect_quest], return_distance=False)
+	return neighbors		# Return the list of the k nearest neighbors
+
 def ret_dict_update(ret_dict, data, i):
     ret_dict['electedAnswer'] = data.text[i + 1]
     ret_dict['bestAnswers'][2] = ret_dict['bestAnswers'][1]
@@ -51,8 +55,9 @@ def ml_hook(question):
 
     vectest = sentence2vec(question)
     res = 0
-    similarity = 7897474684545
-    data = pd.read_csv("../data/answers2.csv")
+    data = pd.read_csv("../data/answers3.csv")
+
+
 
     ret_dict = dict()
     ret_dict['bestAnswers'] = [None, None, None]
@@ -74,4 +79,3 @@ def ml_hook(question):
 
     print(data.text[res])
     return ret_dict
-
