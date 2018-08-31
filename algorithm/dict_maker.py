@@ -14,24 +14,24 @@ import pandas as pd
 from scipy import spatial
 from utils import sentence2vec
 
-# result = 1 - spatial.distance.cosine(dataSetI, dataSetII)
-
 # Load the Stack Over Flow dictionnary of words-vectors
-print("Loading vocab")
-file_Name = "en_model"
-fileObject = open(file_Name,'rb')
-en_model = pickle.load(fileObject)
-fileObject.close()
-
+# print("Loading vocab")
+# file_Name = "en_model"
+# fileObject = open(file_Name,'rb')
+# en_model = pickle.load(fileObject)
+# fileObject.close()
+#
 print("Loading csv")
-data = pd.read_csv("../data/answers2.csv")
+data = pd.read_csv("../data/answers3.csv")
 
 dico = []
 
 print("Beginning")
 for i in range(len(data)):
 	vec = sentence2vec(data.text[i])
-	if vec != None:
+	if i % 10000 == 0:
+		print("[ {} ] processing...".format(i))
+	if vec is not None:
 		dico.append(vec)
 		# dico[i] = vec
 	else:
