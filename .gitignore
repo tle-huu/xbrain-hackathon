@@ -1,2 +1,5 @@
 hax/*
 data/*.csv
+algorithm/en_model
+algorithm/models
+algorithm/models/*
