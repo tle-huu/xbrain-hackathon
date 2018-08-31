@@ -8,6 +8,8 @@ import re
 import string
 import enchant
 import nltk
+nltk.download('stopwords')
+nltk.download('punkt')
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 
@@ -125,7 +127,7 @@ def main():
     # newQuestions = parseQuestionsXML(TO_PARSE)					# parse xml file
     # saveQuestionsToCSV(newQuestions, 'questions2.csv')			# store news items in a csv file
     newAnswers = parseAnswersXML(TO_PARSE)  # parse xml file
-    saveAnswersToCSV(newAnswers, 'answers2.csv')  # store news items in a csv file
+    saveAnswersToCSV(newAnswers, 'answers3.csv')  # store news items in a csv file
 
 
 if __name__ == "__main__":
